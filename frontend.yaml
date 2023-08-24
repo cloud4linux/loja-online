@@ -33,7 +33,7 @@ spec:
       annotations:
         sidecar.istio.io/rewriteAppHTTPProbers: "true"
     spec:
-      serviceAccountName: frontend
+      serviceAccountName: default
       containers:
         - name: server
           image: us-central1-docker.pkg.dev/cluster-gke-395217/frontend/frontend:latest
@@ -71,11 +71,14 @@ spec:
           - name: CHECKOUT_SERVICE_ADDR
             value: "checkoutservice:5050"
           - name: AD_SERVICE_ADDR
-            value: "frontend:9555"
+            value: "adservice:9555"
           - name: ENV_PLATFORM
             value: "gcp"
           - name: ENABLE_PROFILER
             value: "0"
+          volumeMounts:
+          - mountPath: /src
+            name: frontend-data
           resources:
             requests:
               cpu: 100m
@@ -83,29 +86,14 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend
-spec:
-  type: ClusterIP
-  selector:
-    app: frontend
-  ports:
-  - name: http
-    port: 80
-    targetPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend-external
-spec:
-  type: LoadBalancer
-  selector:
-    app: frontend
-  ports:
-  - name: http
-    port: 80
-    targetPort: 8080
+      initContainers:
+      - image: alpine/git
+        name: git
+        command: ['sh', '-c', 'cd /src && rm -rf ..?* .[!.]* * && git clone https://github.com/curso-4linux/538-frontend-data.git /src']
+        volumeMounts:
+        - name: frontend-data
+          mountPath: /src
+      volumes:
+      - name: frontend-data
+        persistentVolumeClaim:
+          claimName: pvc-frontend
