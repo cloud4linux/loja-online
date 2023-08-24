@@ -16,16 +16,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: adservice
+  labels:
+    app: adservice
+    version: v1
 spec:
   selector:
     matchLabels:
       app: adservice
+      version: v1
   template:
     metadata:
       labels:
         app: adservice
+        version: v1
     spec:
-      serviceAccountName: default
+      serviceAccountName: adservice
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
@@ -49,10 +54,10 @@ spec:
           value: "9555"
         resources:
           requests:
-            cpu: 200m
+            cpu: 180m
             memory: 180Mi
           limits:
-            cpu: 300m
+            cpu: 280m
             memory: 300Mi
         readinessProbe:
           initialDelaySeconds: 20

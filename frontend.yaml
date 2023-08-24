@@ -15,87 +15,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-init-container
-  namespace: default
+  name: frontend
+  labels:
+    app: frontend
+    version: v1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: frontend-init-container
-  template:
-    metadata:
-      labels:
-        app: frontend-init-container
-    spec:
-      containers:
-        - name: server
-          image: us-central1-docker.pkg.dev/cluster-gke-395217/frontend/frontend:latest
-          ports:
-          - containerPort: 8080
-          env:
-          - name: PORT
-            value: "8080"
-          - name: PRODUCT_CATALOG_SERVICE_ADDR
-            value: "productcatalogservice:3550"
-          - name: CURRENCY_SERVICE_ADDR
-            value: "currencyservice:7000"
-          - name: CART_SERVICE_ADDR
-            value: "cartservice:7070"
-          - name: RECOMMENDATION_SERVICE_ADDR
-            value: "recommendationservice:8080"
-          - name: SHIPPING_SERVICE_ADDR
-            value: "shippingservice:50051"
-          - name: CHECKOUT_SERVICE_ADDR
-            value: "checkoutservice:5050"
-          - name: AD_SERVICE_ADDR
-            value: "adservice:9555"
-          - name: ENV_PLATFORM
-            value: "gcp"
-          - name: ENABLE_PROFILER
-            value: "0"
-          volumeMounts:
-          - mountPath: /src
-            name: frontend-init-container
-      initContainers:
-      - image: alpine/git
-        name: git
-        command: ['sh', '-c', 'cd /src && rm -rf ..?* .[!.]* * && git clone https://github.com/curso-4linux/538-frontend-data.git /src']
-        volumeMounts:
-        - name: frontend-init-container
-          mountPath: /src
-      volumes:
-      - name: frontend-init-container
-        persistentVolumeClaim:
-          claimName: pvc-frontend 
----
-apiVersion: argoproj.io/v1alpha1
-kind: Rollout
-metadata:
-  name: frontend
-spec:
-  replicas: 5
-  strategy:
-  canary:
-    steps:
-    - setWeight: 20
-    - pause: {duration: 60s}
-    - setWeight: 40
-    - pause: {duration: 60s}
-    - setWeight: 60
-    - pause: {duration: 60s}
-    - setWeight: 80
-    - pause: {duration: 60s}
-  selector:
-    matchLabels:
       app: frontend
+      version: v1
   template:
     metadata:
       labels:
         app: frontend
+        version: v1
       annotations:
         sidecar.istio.io/rewriteAppHTTPProbers: "true"
     spec:
-      serviceAccountName: default
+      serviceAccountName: frontend
       containers:
         - name: server
           image: us-central1-docker.pkg.dev/cluster-gke-395217/frontend/frontend:latest
@@ -133,14 +71,11 @@ spec:
           - name: CHECKOUT_SERVICE_ADDR
             value: "checkoutservice:5050"
           - name: AD_SERVICE_ADDR
-            value: "adservice:9555"
+            value: "frontend:9555"
           - name: ENV_PLATFORM
             value: "gcp"
           - name: ENABLE_PROFILER
             value: "0"
-          volumeMounts:
-          - mountPath: /src
-            name: frontend-data
           resources:
             requests:
               cpu: 100m
@@ -148,17 +83,6 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
-      initContainers:
-      - image: alpine/git
-        name: git
-        command: ['sh', '-c', 'cd /src && rm -rf ..?* .[!.]* * && git clone https://github.com/curso-4linux/538-frontend-data.git /src']
-        volumeMounts:
-        - name: frontend-data
-          mountPath: /src
-      volumes:
-      - name: frontend-data
-        persistentVolumeClaim:
-          claimName: pvc-frontend
 ---
 apiVersion: v1
 kind: Service

@@ -16,16 +16,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: paymentservice
+  labels:
+    app: paymentservice
+    version: v1
 spec:
   selector:
     matchLabels:
       app: paymentservice
+      version: v1
   template:
     metadata:
       labels:
         app: paymentservice
+        version: v1
     spec:
-      serviceAccountName: default
+      serviceAccountName: paymentservice
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
@@ -57,10 +62,10 @@ spec:
             port: 50051
         resources:
           requests:
-            cpu: 100m
+            cpu: 80m
             memory: 64Mi
           limits:
-            cpu: 200m
+            cpu: 180m
             memory: 128Mi
 ---
 apiVersion: v1

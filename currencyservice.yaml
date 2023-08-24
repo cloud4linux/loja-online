@@ -16,16 +16,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: currencyservice
+  labels:
+    app: currencyservice
+    version: v1
 spec:
   selector:
     matchLabels:
       app: currencyservice
+      version: v1
   template:
     metadata:
       labels:
         app: currencyservice
+        version: v1
     spec:
-      serviceAccountName: default
+      serviceAccountName: currencyservice
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
@@ -58,10 +63,10 @@ spec:
             port: 7000
         resources:
           requests:
-            cpu: 100m
+            cpu: 80m
             memory: 64Mi
           limits:
-            cpu: 200m
+            cpu: 180m
             memory: 128Mi
 ---
 apiVersion: v1
